@@ -1,8 +1,31 @@
 // ============================================
-//   CREATIVE COTTON — RESPONSIVE JAVASCRIPT
+//   CREATIVE COTTON — FULL JAVASCRIPT
 // ============================================
 
+const EMAILJS_SERVICE_ID  = "service_jmt4nl8";   
+const EMAILJS_TEMPLATE_ID = "template_101bdib";  
+
 document.addEventListener('DOMContentLoaded', function () {
+
+    // ============ TOAST NOTIFICATION ============
+    function showToast(type, message) {
+        const toast    = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+        const toastIcon= document.getElementById('toastIcon');
+
+        toast.className = 'toast ' + type;
+        toastMsg.textContent = message;
+        toastIcon.className  = type === 'success'
+            ? 'fas fa-circle-check'
+            : 'fas fa-circle-xmark';
+
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 5000);
+    }
+
 
     // ============ HAMBURGER MENU ============
     const hamburgerBtn = document.getElementById('hamburgerBtn');
@@ -13,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
         hamburgerBtn.classList.add('open');
         mobileNav.classList.add('open');
         hamburgerBtn.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden'; // prevent scroll when menu open
+        document.body.style.overflow = 'hidden';
     }
 
     function closeMenu() {
@@ -24,20 +47,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (hamburgerBtn && mobileNav) {
-        hamburgerBtn.addEventListener('click', function () {
-            const isOpen = mobileNav.classList.contains('open');
-            isOpen ? closeMenu() : openMenu();
+        hamburgerBtn.addEventListener('click', () => {
+            mobileNav.classList.contains('open') ? closeMenu() : openMenu();
         });
-
-        // Close menu when a mobile link is clicked
-        mobileLinks.forEach(link => {
-            link.addEventListener('click', closeMenu);
-        });
-
-        // Close menu on Escape key
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') closeMenu();
-        });
+        mobileLinks.forEach(link => link.addEventListener('click', closeMenu));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
     }
 
 
@@ -46,25 +60,21 @@ document.addEventListener('DOMContentLoaded', function () {
         anchor.addEventListener('click', function (e) {
             const targetId = this.getAttribute('href');
             if (targetId === '#') return;
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
+            const target = document.querySelector(targetId);
+            if (target) {
                 e.preventDefault();
                 const headerHeight = parseFloat(
-                    getComputedStyle(document.documentElement)
-                        .getPropertyValue('--header-height')
+                    getComputedStyle(document.documentElement).getPropertyValue('--header-height')
                 ) || 122;
-                window.scrollTo({
-                    top: targetElement.offsetTop - headerHeight,
-                    behavior: 'smooth'
-                });
+                window.scrollTo({ top: target.offsetTop - headerHeight, behavior: 'smooth' });
             }
         });
     });
 
 
-    // ============ READ MORE / LESS (OUR STORY) ============
-    const readMoreBtn    = document.querySelector('.read-more-btn');
-    const storyExpanded  = document.querySelector('.story-expanded');
+    // ============ READ MORE / LESS ============
+    const readMoreBtn   = document.querySelector('.read-more-btn');
+    const storyExpanded = document.querySelector('.story-expanded');
 
     if (readMoreBtn && storyExpanded) {
         readMoreBtn.addEventListener('click', function () {
@@ -94,8 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function startAutoSlide() {
         autoSlideTimer = setInterval(() => {
-            const next = (currentSlide + 1) % scienceSlides.length;
-            showSlide(next);
+            showSlide((currentSlide + 1) % scienceSlides.length);
         }, 5000);
     }
 
@@ -104,22 +113,14 @@ document.addEventListener('DOMContentLoaded', function () {
         startAutoSlide();
     }
 
-    sliderDots.forEach((dot, index) => {
-        dot.addEventListener('click', () => { showSlide(index); resetAutoSlide(); });
-    });
+    sliderDots.forEach((dot, i) => dot.addEventListener('click', () => { showSlide(i); resetAutoSlide(); }));
+    scienceTabs.forEach((tab, i) => tab.addEventListener('click', () => { showSlide(i); resetAutoSlide(); }));
 
-    scienceTabs.forEach((tab, index) => {
-        tab.addEventListener('click', () => { showSlide(index); resetAutoSlide(); });
-    });
-
-    // Touch/swipe support for slider
+    // Touch/swipe support
     let touchStartX = 0;
     const slider = document.querySelector('.science-slider');
     if (slider) {
-        slider.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
+        slider.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
         slider.addEventListener('touchend', e => {
             const diff = touchStartX - e.changedTouches[0].screenX;
             if (Math.abs(diff) > 50) {
@@ -136,50 +137,105 @@ document.addEventListener('DOMContentLoaded', function () {
     startAutoSlide();
 
 
-    // ============ STORY SECTION — SCROLL ANIMATIONS ============
-    const storyHeading   = document.querySelector('.story-heading');
-    const animateLeft    = document.querySelector('.story-animate-left');
-    const animateRight   = document.querySelector('.story-animate-right');
+    // ============ STORY SCROLL ANIMATIONS ============
+    const storyHeading  = document.querySelector('.story-heading');
+    const animateLeft   = document.querySelector('.story-animate-left');
+    const animateRight  = document.querySelector('.story-animate-right');
 
     const storyObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('in-view');
-                storyObserver.unobserve(entry.target); // fire once
+                storyObserver.unobserve(entry.target);
             }
         });
     }, { threshold: 0.15 });
 
-    [storyHeading, animateLeft, animateRight].forEach(el => {
-        if (el) storyObserver.observe(el);
-    });
+    [storyHeading, animateLeft, animateRight].forEach(el => { if (el) storyObserver.observe(el); });
 
 
-
+    // ============ CONTACT FORM — EMAILJS ============
     const contactForm = document.getElementById('contactForm');
+    const submitBtn   = document.getElementById('submitBtn');
+
+    // Live validation helpers
+    function validateField(input) {
+        const group = input.closest('.form-group');
+        if (!group) return true;
+
+        const val = input.value.trim();
+        let valid = true;
+
+        if (input.required && val === '') {
+            valid = false;
+        } else if (input.type === 'email' && val !== '') {
+            valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+        }
+
+        group.classList.toggle('error', !valid);
+        group.classList.toggle('success', valid && val !== '');
+        return valid;
+    }
+
+    // Validate on blur (when user leaves field)
+    if (contactForm) {
+        contactForm.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('blur', () => validateField(input));
+            input.addEventListener('input', () => {
+                if (input.closest('.form-group').classList.contains('error')) {
+                    validateField(input);
+                }
+            });
+        });
+    }
+
+    function setLoading(isLoading) {
+        submitBtn.disabled = isLoading;
+        submitBtn.classList.toggle('loading', isLoading);
+    }
 
     if (contactForm) {
         contactForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            const name    = document.getElementById('name').value.trim();
-            const email   = document.getElementById('email').value.trim();
-            const subject = document.getElementById('subject').value.trim();
-            const message = document.getElementById('message').value.trim();
+            // Validate all required fields
+            const inputs  = contactForm.querySelectorAll('input[required], textarea[required]');
+            let allValid  = true;
 
-            if (!name || !email || !message) {
-                alert('Please fill in all required fields.');
+            inputs.forEach(input => {
+                if (!validateField(input)) allValid = false;
+            });
+
+            if (!allValid) {
+                showToast('error', 'Please fill in all required fields correctly.');
                 return;
             }
 
-            // Replace with actual form submission logic (e.g., fetch to API)
-            alert(`Thank you, ${name}! We've received your message and will get back to you soon.`);
-            contactForm.reset();
+            // Show loading state
+            setLoading(true);
+
+            // Send via EmailJS
+            // template variables: {{from_name}}, {{from_email}}, {{subject}}, {{message}}
+            emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, contactForm)
+                .then(function () {
+                    setLoading(false);
+                    showToast('success', 'Message sent successfully! We\'ll get back to you soon.');
+                    contactForm.reset();
+                    // Clear validation states
+                    contactForm.querySelectorAll('.form-group').forEach(g => {
+                        g.classList.remove('success', 'error');
+                    });
+                })
+                .catch(function (error) {
+                    setLoading(false);
+                    console.error('EmailJS error:', error);
+                    showToast('error', 'Failed to send message. Please try again or email us directly.');
+                });
         });
     }
 
 
-    // ============ SCROLL-BASED NAV SHADOW ============
+    // ============ SCROLL NAV SHADOW ============
     const nav = document.querySelector('nav');
     window.addEventListener('scroll', () => {
         if (nav) {
